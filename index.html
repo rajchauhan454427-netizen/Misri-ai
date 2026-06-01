@@ -3,465 +3,493 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Misri - Personal AI Assistant</title>
+    <title>Misri AI</title>
     
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#171717">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
+    
+    <script src="[https://cdn-npm.com/marked@4.3.0/marked.min.js](https://cdn-npm.com/marked@4.3.0/marked.min.js)"></script>
 
     <style>
+        :root {
+            --bg-main: #171717;
+            --bg-chat: #212121;
+            --bg-user-msg: #2f2f2f;
+            --text-main: #ececec;
+            --accent-purple: #9061f9;
+            --border-color: #424242;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: #0f172a; 
-            color: #f8fafc; 
+            background-color: var(--bg-main);
+            color: var(--text-main);
             display: flex;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
+            width: 100vw;
             overflow: hidden;
         }
 
-        .chat-container {
-            width: 100%;
-            max-width: 450px;
-            height: 90vh;
-            background-color: #1e293b; 
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        /* Full App Wrapper */
+        .app-container {
             display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid #334155;
+            width: 100%;
+            height: 100%;
             position: relative;
         }
 
-        /* Header Style */
-        .chat-header {
-            background-color: #0f172a;
-            padding: 15px 20px;
+        /* Top Bar for Mobile & Desktop Header */
+        .main-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: rgba(23, 23, 23, 0.85);
+            backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid #334155;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border-color);
             z-index: 10;
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .avatar {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #ec4899, #8b5cf6); 
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .assistant-info h2 {
-            font-size: 1.1rem;
-            color: #ffffff;
-        }
-
-        .assistant-info p {
-            font-size: 0.75rem;
-            color: #10b981; 
-        }
-
-        .header-actions {
+        .brand {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        /* Install App Button */
-        #installBtn {
-            background-color: #334155;
-            color: #fff;
-            border: 1px solid #475569;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            display: none;
+        .ai-logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #86efac, #3b82f6, #9333ea);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 15px rgba(147, 51, 234, 0.4);
         }
 
-        /* Settings Button */
-        .settings-btn {
+        .ai-logo.pulse {
+            animation: glowingEffect 1.5s infinite ease-in-out;
+        }
+
+        @keyframes glowingEffect {
+            0% { transform: scale(1); box-shadow: 0 0 10px rgba(147, 51, 234, 0.4); }
+            50% { transform: scale(1.08); box-shadow: 0 0 25px rgba(59, 130, 246, 0.8); }
+            100% { transform: scale(1); box-shadow: 0 0 10px rgba(147, 51, 234, 0.4); }
+        }
+
+        .brand-name {
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .icon-btn {
             background: none;
             border: none;
-            font-size: 1.3rem;
+            color: #b4b4b4;
+            font-size: 1.25rem;
             cursor: pointer;
-            color: #94a3b8;
             transition: color 0.2s;
         }
-        .settings-btn:hover {
-            color: #ffffff;
-        }
 
-        /* API Settings Modal/Panel */
-        .settings-panel {
+        .icon-btn:hover { color: #fff; }
+
+        /* Settings Dropdown Box */
+        .settings-dropdown {
             position: absolute;
-            top: -100%;
-            left: 0;
+            top: 70px;
+            right: 20px;
+            background-color: #2f2f2f;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            width: 280px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 20;
+        }
+
+        .settings-dropdown.active { display: block; }
+
+        .settings-dropdown h4 { font-size: 0.9rem; margin-bottom: 8px; color: #aaa; }
+
+        .settings-dropdown input {
             width: 100%;
-            background-color: #0f172a;
-            border-bottom: 1px solid #334155;
-            padding: 20px;
-            transition: top 0.3s ease-in-out;
-            z-index: 5;
-            box-shadow: 0 10px 15px rgba(0,0,0,0.3);
-        }
-
-        .settings-panel.open {
-            top: 70px; /* Header ke thik neeche khulega */
-        }
-
-        .settings-panel h3 {
-            font-size: 1rem;
-            margin-bottom: 10px;
-            color: #f1f5f9;
-        }
-
-        .settings-panel input {
-            width: 100%;
-            background-color: #1e293b;
-            border: 1px solid #475569;
-            border-radius: 8px;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
             padding: 10px;
-            color: #ffffff;
-            font-size: 0.9rem;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.85rem;
             outline: none;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
-        .settings-panel .panel-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-save {
-            background-color: #10b981;
-            color: white;
+        .save-btn {
+            background-color: #fff;
+            color: #000;
             border: none;
+            width: 100%;
+            padding: 8px;
             border-radius: 6px;
-            padding: 8px 16px;
-            cursor: pointer;
             font-weight: 600;
-        }
-
-        .btn-close {
-            background-color: #475569;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 16px;
             cursor: pointer;
         }
 
-        /* Chat Messages Area */
-        .chat-messages {
+        /* Chat Workspace */
+        .chat-view {
             flex: 1;
-            padding: 20px;
-            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            height: 100%;
+            padding-top: 60px; /* space for header */
+            position: relative;
         }
 
-        .message {
-            max-width: 85%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            word-wrap: break-word;
-        }
-
-        .message.misri {
-            background-color: #334155;
-            color: #f1f5f9;
-            align-self: flex-start;
-            border-top-left-radius: 2px;
-        }
-
-        .message.user {
-            background: linear-gradient(135deg, #6366f1, #4f46e5); 
-            color: #ffffff;
-            align-self: flex-end;
-            border-top-right-radius: 2px;
-        }
-
-        /* Typing Indicator */
-        .typing {
-            font-style: italic;
-            color: #94a3b8;
-            font-size: 0.85rem;
-            align-self: flex-start;
-            display: none;
-        }
-
-        /* Input Area */
-        .chat-input-area {
-            padding: 15px;
-            background-color: #0f172a;
-            border-top: 1px solid #334155;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .chat-input-area input {
+        /* Messages Container (ChatGPT Style Centered Layout) */
+        .messages-wrapper {
             flex: 1;
-            background-color: #1e293b;
-            border: 1px solid #475569;
-            border-radius: 8px;
+            overflow-y: auto;
+            padding-bottom: 140px; /* Space for bottom floating bar */
+        }
+
+        .message-row {
+            width: 100%;
+            display: flex;
+            padding: 24px 16px;
+            justify-content: center;
+        }
+
+        .message-row.user-row {
+            background-color: var(--bg-main);
+        }
+
+        .message-row.misri-row {
+            background-color: var(--bg-chat);
+            border-top: 1px solid rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .message-content {
+            width: 100%;
+            max-width: 720px; /* Desktop standard reading length */
+            display: flex;
+            gap: 18px;
+        }
+
+        .msg-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .user-row .msg-avatar { background-color: #543a3a; color: #ffbaba; }
+        .misri-row .msg-avatar { background: linear-gradient(135deg, #3b82f6, #9333ea); color: white; }
+
+        .msg-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #d1d5db;
+            word-break: break-word;
+        }
+
+        /* Code block stylings inside markdown response */
+        .msg-text pre {
+            background-color: #000;
             padding: 12px;
-            color: #ffffff;
-            font-size: 0.95rem;
+            border-radius: 8px;
+            margin: 10px 0;
+            overflow-x: auto;
+            border: 1px solid #333;
+        }
+        .msg-text code { font-family: monospace; color: #f472b6; }
+
+        /* Floating Input Container */
+        .input-floating-wrap {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 0 20px 24px 20px;
+            background: linear-gradient(transparent, var(--bg-main) 30%);
+            display: flex;
+            justify-content: center;
+        }
+
+        .input-box-container {
+            width: 100%;
+            max-width: 720px;
+            background-color: var(--bg-chat);
+            border: 1px solid var(--border-color);
+            border-radius: 26px;
+            display: flex;
+            align-items: center;
+            padding: 6px 14px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .input-box-container input {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 12px;
+            color: white;
+            font-size: 1rem;
             outline: none;
         }
 
-        .mic-btn {
-            background-color: #334155;
-            color: #f8fafc;
-            border: 1px solid #475569;
-            border-radius: 8px;
-            width: 45px;
-            height: 45px;
+        .input-box-container input::placeholder { color: #7f7f7f; }
+
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: none;
+            color: #b4b4b4;
             font-size: 1.2rem;
             cursor: pointer;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
 
-        .mic-btn.listening {
-            background-color: #ef4444;
-            animation: pulse 1.2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .send-btn {
-            background-color: #6366f1;
+        .action-icon:hover { color: white; background-color: rgba(255,255,255,0.05); }
+        
+        #micBtn.listening {
+            background-color: #ea580c;
             color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 0 18px;
-            height: 45px;
-            font-weight: 600;
-            cursor: pointer;
+            animation: micPulse 1s infinite alternate;
         }
+
+        @keyframes micPulse { 
+            from { transform: scale(1); } to { transform: scale(1.1); } 
+        }
+
+        #sendBtn { color: var(--text-main); }
+        #sendBtn.active { color: #fff; background-color: var(--border-color); }
+
+        /* Custom Scrollbar */
+        .messages-wrapper::-webkit-scrollbar { width: 8px; }
+        .messages-wrapper::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <div class="chat-container">
-        <div class="chat-header">
-            <div class="header-left">
-                <div class="avatar">M</div>
-                <div class="assistant-info">
-                    <h2>Misri</h2>
-                    <p>● Online</p>
+    <div class="app-container">
+        <header class="main-header">
+            <div class="brand">
+                <div class="ai-logo" id="logoStatus"></div>
+                <span class="brand-name">Misri 1.0</span>
+            </div>
+            <div class="action-btns">
+                <button class="icon-btn" id="installBtn" style="display:none;" title="Install App">📥</button>
+                <button class="icon-btn" id="gearBtn" title="API Configuration">⚙️</button>
+            </div>
+        </header>
+
+        <div class="settings-dropdown" id="settingsBox">
+            <h4>Gemini Pro API Key</h4>
+            <input type="password" id="apiKeyValue" placeholder="Paste your secret key here...">
+            <button class="save-btn" id="saveApiBtn">Apply Key</button>
+        </div>
+
+        <main class="chat-view">
+            <div class="messages-wrapper" id="chatDisplay">
+                <div class="message-row misri-row">
+                    <div class="message-content">
+                        <div class="msg-avatar">M</div>
+                        <div class="msg-text" id="welcomeText">
+                            Hello Raj, main aapki AI system **Misri** hu. Ekdam fresh aur clean interface ke saath taiyar. Shuru karne ke liye top right corner me ⚙️ icon dabakar apni Gemini API Key configure karein.
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="header-actions">
-                <button id="installBtn">📲 Install</button>
-                <button class="settings-btn" id="settingsBtn" title="API Settings">⚙️</button>
-            </div>
-        </div>
 
-        <div class="settings-panel" id="settingsPanel">
-            <h3>Gemini AI API Key Set Karein:</h3>
-            <input type="password" id="apiKeyInput" placeholder="Apni Gemini API Key yahan paste karein...">
-            <div class="panel-buttons">
-                <button class="btn-save" id="saveKeyBtn">Save Key</button>
-                <button class="btn-close" id="closePanelBtn">Cancel</button>
+            <div class="input-floating-wrap">
+                <div class="input-box-container">
+                    <input type="text" id="queryInput" placeholder="Message Misri..." autocomplete="off">
+                    <button class="action-icon" id="micBtn" title="Voice Input">🎙️</button>
+                    <button class="action-icon" id="sendBtn" title="Send Message">➔</button>
+                </div>
             </div>
-        </div>
-
-        <div class="chat-messages" id="chatMessages">
-            <div class="message misri" id="welcomeMessage">
-                Namaste Raj! Main aapki AI assistant Misri hu. Shuru karne ke liye upar diye gaye ⚙️ icon par click karke apni Gemini API Key add karein!
-            </div>
-            <div class="typing" id="typingIndicator">Misri soch rahi hai...</div>
-        </div>
-
-        <div class="chat-input-area">
-            <input type="text" id="userInput" placeholder="Misri se kuch bhi poochhein..." autocomplete="off">
-            <button class="mic-btn" id="micBtn" title="Speak">🎙️</button>
-            <button class="send-btn" id="sendBtn">Send</button>
-        </div>
+        </main>
     </div>
 
     <script>
-        const chatMessages = document.getElementById('chatMessages');
-        const userInput = document.getElementById('userInput');
+        const chatDisplay = document.getElementById('chatDisplay');
+        const queryInput = document.getElementById('queryInput');
         const sendBtn = document.getElementById('sendBtn');
         const micBtn = document.getElementById('micBtn');
-        const typingIndicator = document.getElementById('typingIndicator');
+        const logoStatus = document.getElementById('logoStatus');
         
         // Settings Elements
-        const settingsBtn = document.getElementById('settingsBtn');
-        const settingsPanel = document.getElementById('settingsPanel');
-        const apiKeyInput = document.getElementById('apiKeyInput');
-        const saveKeyBtn = document.getElementById('saveKeyBtn');
-        const closePanelBtn = document.getElementById('closePanelBtn');
-        const welcomeMessage = document.getElementById('welcomeMessage');
+        const gearBtn = document.getElementById('gearBtn');
+        const settingsBox = document.getElementById('settingsBox');
+        const apiKeyValue = document.getElementById('apiKeyValue');
+        const saveApiBtn = document.getElementById('saveApiBtn');
+        const welcomeText = document.getElementById('welcomeText');
 
-        // Page load hote hi check karo agar key pehle se saved hai ya nahi
         let GEMINI_API_KEY = localStorage.getItem('misri_api_key') || "";
         
         if (GEMINI_API_KEY) {
-            apiKeyInput.value = GEMINI_API_KEY;
-            welcomeMessage.innerText = "Welcome back, Raj! Main aapki Misri taiyar hu. Poochhiye kya poochna hai?";
+            apiKeyValue.value = GEMINI_API_KEY;
+            welcomeText.innerHTML = "Welcome back, **Raj**. Main active hu aur poore professional layout me kaam karne ke liye ready hu. Aaj aap kya create karna chahte hain?";
         }
 
-        // Settings Toggle panel logic
-        settingsBtn.addEventListener('click', () => {
-            settingsPanel.classList.toggle('open');
+        // Dropdown toggle
+        gearBtn.addEventListener('click', () => settingsBox.classList.toggle('active'));
+        
+        saveApiBtn.addEventListener('click', () => {
+            const val = apiKeyValue.value.trim();
+            if(!val) return alert("Raj, please enter a valid key!");
+            localStorage.setItem('misri_api_key', val);
+            GEMINI_API_KEY = val;
+            settingsBox.classList.remove('active');
+            appendRow("System Notification: API Key update ho gayi hai, Raj. Interface fully active hai.", "misri");
         });
 
-        closePanelBtn.addEventListener('click', () => {
-            settingsPanel.classList.remove('open');
-        });
-
-        // Key ko LocalStorage me save karna
-        saveKeyBtn.addEventListener('click', () => {
-            const keyVal = apiKeyInput.value.trim();
-            if(keyVal === "") {
-                alert("Raj, kripya ek valid API Key daliye.");
-                return;
+        // Smart Render Row function
+        function appendRow(text, sender) {
+            const row = document.createElement('div');
+            row.classList.add('message-row', `${sender}-row`);
+            
+            const content = document.createElement('div');
+            content.classList.add('message-content');
+            
+            const avatar = document.createElement('div');
+            avatar.classList.add('msg-avatar');
+            avatar.innerText = sender === 'user' ? 'R' : 'M';
+            
+            const txtDiv = document.createElement('div');
+            txtDiv.classList.add('msg-text');
+            
+            // Markdown logic use karke headers aur formatting design karna
+            if (typeof marked !== 'undefined') {
+                txtDiv.innerHTML = marked.parse(text);
+            } else {
+                txtDiv.innerText = text;
             }
-            localStorage.setItem('misri_api_key', keyVal);
-            GEMINI_API_KEY = keyVal;
-            settingsPanel.classList.remove('open');
-            appendMessage("API Key successfully update ho gayi hai, Raj!", "misri");
-        });
-
-        function appendMessage(text, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message', sender);
-            messageDiv.innerText = text;
-            chatMessages.insertBefore(messageDiv, typingIndicator);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            content.appendChild(avatar);
+            content.appendChild(txtDiv);
+            row.appendChild(content);
+            chatDisplay.appendChild(row);
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
         }
 
-        // --- GEMINI API CALL ---
-        async function fetchAIResponse(prompt) {
+        // Core API Call
+        async function askMisri(prompt) {
             if (!GEMINI_API_KEY) {
-                return "Raj, lagta hai aapne API Key set nahi ki hai. Kripya upar ⚙️ icon par click karke apni key add karein.";
+                return "Raj, please pehle settings icon (⚙️) par click karke apni Gemini API Key paste kijiye.";
             }
 
-            typingIndicator.style.display = "block";
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            logoStatus.classList.add('pulse'); // Pulse animation start
 
-            const systemInstruction = "Aapka naam Misri hai. Aap ek intelligent, helpful aur polite AI assistant hain. Aapke owner/master ka naam Raj hai. Aap unhe hamesha 'Raj' keh kar hi bulayenge aur hamesha Hindi/Hinglish me baat karenge. Jawab short aur crisp rakhein.";
+            const systemInstruction = "Your name is Misri. You are a highly professional, modern, and intelligent AI custom assistant developed for your master 'Raj'. You must address him as 'Raj' gracefully. Keep responses neatly structured, professional, yet friendly, primarily in clean Hinglish or clear Hindi.";
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ 
-                            parts: [{ text: `${systemInstruction}\n\nUser (Raj): ${prompt}` }] 
-                        }]
+                        contents: [{ parts: [{ text: `${systemInstruction}\n\nUser (Raj): ${prompt}` }] }]
                     })
                 });
-
-                const data = await response.json();
-                typingIndicator.style.display = "none";
+                const data = await res.json();
+                logoStatus.classList.remove('pulse'); // Stop pulse
 
                 if (data.candidates && data.candidates[0].content.parts[0].text) {
                     return data.candidates[0].content.parts[0].text;
-                } else {
-                    return "Maaf kijiyega Raj, mujhe samajhne me thodi dikkat hui. Kripya phir se bolein.";
                 }
-            } catch (error) {
-                console.error(error);
-                typingIndicator.style.display = "none";
-                return "Raj, lagta hai API key galat hai ya koi network error hai. Kripya settings me jaakar key dubara check karein.";
+                return "System log: Response processing me issue aaya, Raj. Dobara prayas karein.";
+            } catch (err) {
+                logoStatus.classList.remove('pulse');
+                return "Error: Connection establish nahi ho pa raha hai. Apni API configuration verify karein, Raj.";
             }
         }
 
-        async function handleSendMessage() {
-            const text = userInput.value.trim();
-            if (text === '') return;
+        async function initSend() {
+            const query = queryInput.value.trim();
+            if (!query) return;
 
-            appendMessage(text, 'user');
-            userInput.value = '';
+            appendRow(query, 'user');
+            queryInput.value = '';
 
-            const aiResponse = await fetchAIResponse(text);
-            appendMessage(aiResponse, 'misri');
+            const aiRes = await askMisri(query);
+            appendRow(aiRes, 'misri');
         }
 
-        // --- VOICE RECOGNITION ---
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'hi-IN';
-            recognition.interimResults = false;
-
+        // Voice handling
+        const SpeechReg = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechReg) {
+            const rec = new SpeechReg();
+            rec.lang = 'hi-IN';
+            
             micBtn.addEventListener('click', () => {
-                if (micBtn.classList.contains('listening')) { recognition.stop(); } 
-                else { recognition.start(); }
+                if (micBtn.classList.contains('listening')) { rec.stop(); } 
+                else { rec.start(); }
             });
-
-            recognition.onstart = () => {
+            rec.onstart = () => {
                 micBtn.classList.add('listening');
-                userInput.placeholder = "Main sun rahi hu Raj...";
+                queryInput.placeholder = "Listening closely, Raj...";
             };
-            recognition.onend = () => {
+            rec.onend = () => {
                 micBtn.classList.remove('listening');
-                userInput.placeholder = "Misri se kuch bhi poochhein...";
+                queryInput.placeholder = "Message Misri...";
             };
-            recognition.onresult = (event) => {
-                userInput.value = event.results[0][0].transcript;
-                handleSendMessage();
+            rec.onresult = (e) => {
+                queryInput.value = e.results[0][0].transcript;
+                initSend();
             };
         }
 
-        sendBtn.addEventListener('click', handleSendMessage);
-        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSendMessage(); });
+        sendBtn.addEventListener('click', initSend);
+        queryInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') initSend(); });
 
-        // --- PWA INSTALATION ---
-        let deferredPrompt;
-        const installBtn = document.getElementById('installBtn');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.style.display = 'block';
+        // Change send arrow styling dynamically
+        queryInput.addEventListener('input', () => {
+            if(queryInput.value.trim() !== "") { sendBtn.classList.add('active'); }
+            else { sendBtn.classList.remove('active'); }
         });
 
+        // PWA Installation
+        let defPrompt;
+        const installBtn = document.getElementById('installBtn');
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); defPrompt = e; installBtn.style.display = 'block';
+        });
         installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') { console.log('App Installed'); }
-                deferredPrompt = null;
-                installBtn.style.display = 'none';
+            if (defPrompt) {
+                defPrompt.prompt();
+                const { outcome } = await defPrompt.userChoice;
+                if (outcome === 'accepted') installBtn.style.display = 'none';
+                defPrompt = null;
             }
         });
     </script>
 </body>
 </html>
-
